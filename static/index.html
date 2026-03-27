@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Engati AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@300;400;500&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0e0e10;
+      --surface: #141416;
+      --surface2: #1c1c1f;
+      --surface3: #242428;
+      --border: rgba(255, 255, 255, 0.07);
+      --border-mid: rgba(255, 255, 255, 0.11);
+      --border-hi: rgba(255, 255, 255, 0.18);
+      --accent: #00d4aa;
+      --accent-dim: rgba(0, 212, 170, 0.12);
+      --accent-glow: rgba(0, 212, 170, 0.05);
+      --text: #f0ede8;
+      --text-2: #9b9892;
+      --text-3: #4e4c4a;
+      --radius: 14px;
+      --r-sm: 8px;
+      --r-pill: 999px;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Geist', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.055) 2px, rgba(0, 0, 0, 0.055) 3px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 720px;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent) 40%, transparent);
+      opacity: 0.45;
+    }
+
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      border: 1px solid rgba(0, 212, 170, 0.2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: rgba(0, 212, 170, 0.06);
+    }
+
+    .logo-mark svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .hd-title {
+      font-family: 'Geist Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+
+    .hd-sub {
+      font-size: 10.5px;
+      color: var(--text-3);
+      margin-top: 1px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      font-family: 'Geist Mono', monospace;
+    }
+
+    .status-pill {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--r-pill);
+      border: 1px solid var(--border-mid);
+      background: var(--surface2);
+      font-size: 11px;
+      color: var(--text-2);
+      font-family: 'Geist Mono', monospace;
+    }
+
+    .status-pill.offline {
+      border-color: rgba(255, 70, 70, 0.25);
+      color: #e87;
+    }
+
+    .sdot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .sdot.on {
+      animation: blink 2.8s ease infinite;
+    }
+
+    .sdot.off {
+      background: #e55;
+      animation: none;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.2
+      }
+    }
+
+    /* Feed */
+    #feed {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      scroll-behavior: smooth;
+    }
+
+    #feed::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    #feed::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #feed::-webkit-scrollbar-thumb {
+      background: var(--surface3);
+      border-radius: 3px;
+    }
+
+    .row {
+      display: flex;
+      gap: 11px;
+      animation: rise 0.2s ease both;
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(6px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .row.user {
+      flex-direction: row-reverse;
+      align-self: flex-end;
+      max-width: 80%;
+    }
+
+    .row.bot {
+      align-self: flex-start;
+      max-width: 90%;
+    }
+
+    .av {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border-mid);
+      background: var(--surface2);
+    }
+
+    .av svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .row.user .av {
+      border-color: rgba(0, 212, 170, 0.18);
+      background: rgba(0, 212, 170, 0.07);
+    }
+
+    .bubble {
+      padding: 11px 15px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      line-height: 1.72;
+      word-break: break-word;
+    }
+
+    .row.user .bubble {
+      background: var(--surface2);
+      border: 1px solid var(--border-mid);
+      border-bottom-right-radius: 3px;
+    }
+
+    .row.bot .bubble {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 3px;
+    }
+
+    .row.bot .bubble.err {
+      border-color: rgba(230, 80, 80, 0.2);
+      color: #e88;
+    }
+
+    /* markdown */
+    .row.bot .bubble p {
+      margin-bottom: 9px;
+    }
+
+    .row.bot .bubble p:last-child {
+      margin-bottom: 0;
+    }
+
+    .row.bot .bubble strong {
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .row.bot .bubble em {
+      color: var(--text-2);
+    }
+
+    .row.bot .bubble h1,
+    .row.bot .bubble h2,
+    .row.bot .bubble h3 {
+      font-family: 'Geist Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: #fff;
+      margin: 14px 0 5px;
+      letter-spacing: -0.2px;
+    }
+
+    .row.bot .bubble ul,
+    .row.bot .bubble ol {
+      margin: 4px 0 9px 16px;
+    }
+
+    .row.bot .bubble li {
+      margin-bottom: 3px;
+    }
+
+    .row.bot .bubble code {
+      font-family: 'Geist Mono', monospace;
+      font-size: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border-mid);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--accent);
+    }
+
+    .row.bot .bubble pre {
+      background: var(--surface2);
+      border: 1px solid var(--border-mid);
+      padding: 12px 14px;
+      border-radius: var(--r-sm);
+      overflow-x: auto;
+      margin: 8px 0 10px;
+    }
+
+    .row.bot .bubble pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--text-2);
+      font-size: 12px;
+    }
+
+    .row.bot .bubble a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .row.bot .bubble a:hover {
+      text-decoration: underline;
+    }
+
+    .row.bot .bubble blockquote {
+      border-left: 2px solid var(--accent);
+      padding-left: 12px;
+      margin: 8px 0;
+      color: var(--text-2);
+    }
+
+    .row.bot .bubble hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 12px 0;
+    }
+
+    .row.bot .bubble table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 8px 0;
+      font-size: 13px;
+    }
+
+    .row.bot .bubble th,
+    .row.bot .bubble td {
+      border: 1px solid var(--border-mid);
+      padding: 6px 10px;
+      text-align: left;
+    }
+
+    .row.bot .bubble th {
+      background: var(--surface2);
+      font-weight: 500;
+      color: #fff;
+    }
+
+    /* thought process */
+    .thought {
+      background: var(--surface2);
+      border: 1px solid var(--border-mid);
+      border-radius: var(--r-sm);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .thought summary {
+      padding: 8px 12px;
+      font-size: 12px;
+      font-family: 'Geist Mono', monospace;
+      color: var(--text-2);
+      cursor: pointer;
+      user-select: none;
+      background: rgba(0, 0, 0, 0.15);
+      border-bottom: 1px solid transparent;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .thought summary:hover {
+      color: #fff;
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    .thought[open] summary {
+      border-bottom-color: var(--border-mid);
+      color: var(--accent);
+    }
+
+    .thought-content {
+      padding: 12px;
+      font-size: 12.5px;
+      color: var(--text-2);
+      line-height: 1.6;
+      border-top: 1px solid rgba(0,0,0,0.2);
+    }
+
+    /* sources */
+    .sources {
+      margin-top: 7px;
+      padding: 6px 11px;
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      font-size: 11px;
+      color: var(--text-3);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      font-family: 'Geist Mono', monospace;
+      background: var(--accent-glow);
+    }
+
+    .sources a {
+      color: var(--accent);
+      text-decoration: none;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sources a:hover {
+      text-decoration: underline;
+    }
+
+    /* typing */
+    .typing .bubble {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 14px 15px;
+    }
+
+    .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--text-3);
+      animation: hop 1.4s ease infinite;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: 0.14s
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: 0.28s
+    }
+
+    @keyframes hop {
+
+      0%,
+      80%,
+      100% {
+        transform: translateY(0);
+        opacity: .4
+      }
+
+      40% {
+        transform: translateY(-5px);
+        opacity: 1
+      }
+    }
+
+    /* chips */
+    #chips {
+      padding: 2px 22px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    #chips button {
+      font-family: 'Geist Mono', monospace;
+      font-size: 11px;
+      padding: 5px 11px;
+      border-radius: var(--r-pill);
+      border: 1px solid var(--border-mid);
+      background: var(--surface2);
+      color: var(--text-2);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      white-space: nowrap;
+    }
+
+    #chips button:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    #chips button:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* input */
+    .input-wrap {
+      padding: 12px 16px 14px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      padding: 10px 13px;
+      border: 1px solid var(--border-mid);
+      border-radius: var(--radius);
+      background: var(--surface2);
+      transition: border-color 0.18s;
+    }
+
+    .input-row:focus-within {
+      border-color: rgba(0, 212, 170, 0.3);
+    }
+
+    #input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: 'Geist', sans-serif;
+      font-size: 14px;
+      line-height: 1.55;
+      resize: none;
+      max-height: 120px;
+      min-height: 22px;
+      padding: 0;
+    }
+
+    #input::placeholder {
+      color: var(--text-3);
+    }
+
+    #input:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    #send {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      border: none;
+      background: var(--accent);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: opacity 0.14s, transform 0.12s;
+    }
+
+    #send:hover:not(:disabled) {
+      opacity: 0.82;
+    }
+
+    #send:active:not(:disabled) {
+      transform: scale(0.92);
+    }
+
+    #send:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+    }
+
+    #send svg {
+      width: 15px;
+      height: 15px;
+      fill: #0a0a0a;
+    }
+
+    .footnote {
+      text-align: center;
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px;
+      color: var(--text-3);
+      letter-spacing: 0.5px;
+    }
+
+    /* model selector pill */
+    #model-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--r-pill);
+      border: 1px solid var(--border-mid);
+      background: var(--surface2);
+      font-size: 11px;
+      color: var(--text-2);
+      font-family: 'Geist Mono', monospace;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+      max-width: 160px;
+      overflow: hidden;
+    }
+    #model-pill:hover { border-color: var(--accent); color: var(--accent); }
+    #model-pill .mp-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent); flex-shrink: 0;
+    }
+    #model-pill .mp-name {
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* model modal overlay */
+    #model-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(4px);
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 64px;
+    }
+    #model-modal.open { display: flex; }
+    #model-box {
+      background: var(--surface);
+      border: 1px solid var(--border-mid);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 620px;
+      max-height: 70vh;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: rise 0.18s ease both;
+    }
+    #model-box::-webkit-scrollbar { width: 3px; }
+    #model-box::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+
+    .mbox-header {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .mbox-title {
+      font-family: 'Geist Mono', monospace; font-size: 13px;
+      font-weight: 500; color: #fff;
+    }
+    .mbox-close {
+      width: 28px; height: 28px; border-radius: 7px;
+      border: 1px solid var(--border-mid); background: var(--surface2);
+      color: var(--text-2); cursor: pointer; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .mbox-close:hover { border-color: var(--accent); color: var(--accent); }
+
+    .tier-section { display: flex; flex-direction: column; gap: 8px; }
+    .tier-label {
+      font-size: 10px; font-family: 'Geist Mono', monospace;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      color: var(--text-3); padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tier-label.reasoning { color: rgba(0,212,170,0.55); border-color: rgba(0,212,170,0.12); }
+
+    .model-grid { display: flex; flex-direction: column; gap: 5px; }
+    .model-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .model-card:hover { border-color: var(--border-hi); background: var(--surface3); }
+    .model-card.selected {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .mc-name {
+      font-family: 'Geist Mono', monospace; font-size: 12px;
+      font-weight: 500; color: var(--text); flex: 1;
+    }
+    .mc-badges { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+    .badge {
+      font-family: 'Geist Mono', monospace; font-size: 10px;
+      padding: 2px 7px; border-radius: 4px;
+      border: 1px solid; white-space: nowrap;
+    }
+    .badge.ctx  { color: #9b8; border-color: rgba(150,190,130,0.2); background: rgba(150,190,130,0.05); }
+    .badge.rpm  { color: #89c; border-color: rgba(130,140,200,0.2); background: rgba(130,140,200,0.05); }
+    .badge.rpd  { color: #c9a; border-color: rgba(200,160,130,0.2); background: rgba(200,160,130,0.05); }
+    .badge.tpm  { color: #9bc; border-color: rgba(130,180,200,0.2); background: rgba(130,180,200,0.05); }
+    .badge.think{ color: var(--accent); border-color: rgba(0,212,170,0.25); background: rgba(0,212,170,0.07); }
+
+    .mbox-loading {
+      text-align: center; padding: 30px;
+      font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--text-3);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="shell">
+
+    <header>
+      <div class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="6" width="14" height="10" rx="2.5" stroke="#00d4aa" stroke-width="1.2" />
+          <circle cx="7.5" cy="11" r="1.2" fill="#00d4aa" />
+          <circle cx="12.5" cy="11" r="1.2" fill="#00d4aa" />
+          <rect x="8.5" y="13.5" width="3" height="1" rx="0.5" fill="#00d4aa" />
+          <path d="M10 6V4" stroke="#00d4aa" stroke-width="1.2" stroke-linecap="round" />
+          <circle cx="10" cy="3.2" r="0.8" fill="#00d4aa" />
+          <path d="M3 9.5H1.5M18.5 9.5H17" stroke="#00d4aa" stroke-width="1.2" stroke-linecap="round" />
+        </svg>
+      </div>
+      <div>
+        <div class="hd-title">Engati AI</div>
+        <div class="hd-sub">RAG · Groq · ChromaDB</div>
+      </div>
+      <div class="status-pill" id="spill">
+        <div class="sdot on" id="sdot"></div>
+        <span id="slbl">online</span>
+      </div>
+      <button id="model-pill" title="Switch model" aria-label="Select model">
+        <div class="mp-dot"></div>
+        <span class="mp-name" id="mp-name">deepseek-r1</span>
+      </button>
+    </header>
+
+    <!-- Model selector modal -->
+    <div id="model-modal" role="dialog" aria-modal="true" aria-label="Select LLM model">
+      <div id="model-box">
+        <div class="mbox-header">
+          <div class="mbox-title">Select Model</div>
+          <button class="mbox-close" id="modal-close" aria-label="Close">&#x2715;</button>
+        </div>
+        <div id="model-list"><div class="mbox-loading">Loading models…</div></div>
+      </div>
+    </div>
+
+    <div id="feed" role="log" aria-live="polite" aria-label="Conversation">
+      <div class="row bot">
+        <div class="av" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="none">
+            <rect x="3" y="6" width="14" height="10" rx="2.5" stroke="#00d4aa" stroke-width="1.2" />
+            <circle cx="7.5" cy="11" r="1.2" fill="#00d4aa" />
+            <circle cx="12.5" cy="11" r="1.2" fill="#00d4aa" />
+            <rect x="8.5" y="13.5" width="3" height="1" rx="0.5" fill="#00d4aa" />
+            <path d="M10 6V4" stroke="#00d4aa" stroke-width="1.2" stroke-linecap="round" />
+            <circle cx="10" cy="3.2" r="0.8" fill="#00d4aa" />
+            <path d="M3 9.5H1.5M18.5 9.5H17" stroke="#00d4aa" stroke-width="1.2" stroke-linecap="round" />
+          </svg>
+        </div>
+        <div class="bubble">
+          Hello. I'm your <strong>Engati AI assistant</strong> — ask me anything about the API, WhatsApp integrations,
+          conversation flows, webhooks, or platform features.<br><br>What would you like to know?
+        </div>
+      </div>
+    </div>
+
+    <div id="chips" role="list">
+      <button data-q="How does Engati API authentication work?" role="listitem">API auth</button>
+      <button data-q="How do I set up WhatsApp integration?" role="listitem">WhatsApp setup</button>
+      <button data-q="What are the Engati API rate limits?" role="listitem">Rate limits</button>
+      <button data-q="How do I build conversation flows?" role="listitem">Conversation flows</button>
+      <button data-q="How do I configure webhooks in Engati?" role="listitem">Webhooks</button>
+    </div>
+
+    <div class="input-wrap">
+      <div class="input-row">
+        <textarea id="input" rows="1" placeholder="Ask anything about Engati…" aria-label="Message" autocomplete="off"
+          spellcheck="true"></textarea>
+        <button id="send" aria-label="Send message">
+          <svg viewBox="0 0 24 24">
+            <path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z" />
+          </svg>
+        </button>
+      </div>
+      <div class="footnote">engati &nbsp;·&nbsp; groq llama-3.3-70b &nbsp;·&nbsp; chromadb</div>
+    </div>
+
+  </div>
+  <script>
+    marked.setOptions({ breaks: true, gfm: true, headerIds: false, mangle: false });
+
+    const feed = document.getElementById('feed');
+    const inputEl = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
+    const chips = document.getElementById('chips');
+    const sdot = document.getElementById('sdot');
+    const slbl = document.getElementById('slbl');
+    const spill = document.getElementById('spill');
+    const modelPill = document.getElementById('model-pill');
+    const mpName = document.getElementById('mp-name');
+    const modelModal = document.getElementById('model-modal');
+    const modelList = document.getElementById('model-list');
+    const modalClose = document.getElementById('modal-close');
+    let busy = false;
+    let selectedModel = 'deepseek-r1-distill-llama-70b';
+
+    // ---- Model Selector ----
+    function shortName(id) {
+      // Strip common suffixes for display
+      return id.replace(/-distill-llama-\d+b$/i,'').replace(/-preview$/,'').replace(/-it$/,'');
+    }
+
+    function fmtCtx(n) {
+      return n >= 1000 ? (n/1000).toFixed(0) + 'K' : n;
+    }
+
+    function buildModelUI(data) {
+      modelList.innerHTML = '';
+      data.tiers.forEach(tier => {
+        const sec = document.createElement('div');
+        sec.className = 'tier-section';
+        const lbl = document.createElement('div');
+        lbl.className = 'tier-label' + (tier.key === 'reasoning' ? ' reasoning' : '');
+        lbl.textContent = tier.label;
+        sec.appendChild(lbl);
+        const grid = document.createElement('div');
+        grid.className = 'model-grid';
+        tier.models.forEach(m => {
+          const card = document.createElement('div');
+          card.className = 'model-card' + (m.id === selectedModel ? ' selected' : '');
+          card.dataset.id = m.id;
+          card.innerHTML = `
+            <div class="mc-name">${m.id}</div>
+            <div class="mc-badges">
+              ${tier.key === 'reasoning' ? '<span class="badge think">reasoning</span>' : ''}
+              <span class="badge ctx">${fmtCtx(m.ctx_window)} ctx</span>
+              ${m.owned_by ? `<span class="badge rpm">${m.owned_by}</span>` : ''}
+            </div>`;
+          card.addEventListener('click', () => {
+            selectedModel = m.id;
+            mpName.textContent = shortName(m.id);
+            document.querySelectorAll('.model-card').forEach(c => c.classList.toggle('selected', c.dataset.id === m.id));
+            closeModal();
+          });
+          grid.appendChild(card);
+        });
+        sec.appendChild(grid);
+        modelList.appendChild(sec);
+      });
+    }
+
+    function openModal() {
+      modelModal.classList.add('open');
+      if (modelList.querySelector('.mbox-loading')) {
+        fetch('/api/models')
+          .then(r => r.json())
+          .then(data => { selectedModel = data.default || selectedModel; buildModelUI(data); })
+          .catch(() => { modelList.innerHTML = '<div class="mbox-loading">Failed to load models.</div>'; });
+      }
+    }
+
+    function closeModal() { modelModal.classList.remove('open'); }
+
+    modelPill.addEventListener('click', openModal);
+    modalClose.addEventListener('click', closeModal);
+    modelModal.addEventListener('click', e => { if (e.target === modelModal) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    function grow() {
+      inputEl.style.height = 'auto';
+      inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+    }
+    inputEl.addEventListener('input', grow);
+    inputEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); go(); }
+    });
+    sendBtn.addEventListener('click', go);
+    chips.querySelectorAll('button').forEach(b =>
+      b.addEventListener('click', () => { if (!busy) send(b.dataset.q); })
+    );
+
+    function go() {
+      const q = inputEl.value.trim();
+      if (!q || busy) return;
+      inputEl.value = ''; grow();
+      
+      if (q.startsWith('/ingest ')) {
+        const url = q.substring(8).trim();
+        if (url) {
+          ingestUrl(url);
+          return;
+        }
+      }
+      send(q);
+    }
+
+    function ingestUrl(url) {
+      chips.style.display = 'none';
+      addUser('/ingest ' + url);
+      const typing = addTyping();
+      lock(true);
+      
+      typing.innerHTML = '<div class="bubble"><em>Crawling target site... This might take up to a minute.</em></div>';
+
+      fetch('/api/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      })
+        .then(r => { setOnline(r.ok); if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(d => { typing.remove(); addBot(d.message || d.detail || 'Successfully ingested new knowledge base.', [], false); })
+        .catch(() => {
+          typing.remove();
+          addBot(navigator.onLine ? 'Could not reach the server or invalid URL.' : 'You appear to be offline.', [], true);
+        })
+        .finally(() => { lock(false); inputEl.focus(); });
+    }
+
+    function send(query) {
+      chips.style.display = 'none';
+      addUser(query);
+      const typing = addTyping();
+      lock(true);
+
+      fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, model: selectedModel })
+      })
+        .then(r => { setOnline(r.ok); if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(d => { typing.remove(); addBot(d.answer || d.detail || 'No response.', d.source_documents || [], false); })
+        .catch(() => {
+          typing.remove();
+          addBot(navigator.onLine ? 'Could not reach the server. Make sure the API is running.' : 'You appear to be offline.', [], true);
+        })
+        .finally(() => { lock(false); inputEl.focus(); });
+    }
+
+    function lock(s) {
+      busy = s; sendBtn.disabled = s; inputEl.disabled = s;
+      chips.querySelectorAll('button').forEach(b => b.disabled = s);
+    }
+
+    function setOnline(on) {
+      sdot.className = 'sdot ' + (on ? 'on' : 'off');
+      slbl.textContent = on ? 'online' : 'offline';
+      spill.className = 'status-pill' + (on ? '' : ' offline');
+    }
+
+    const BOT_SVG = `<svg viewBox="0 0 20 20" fill="none">
+    <rect x="3" y="6" width="14" height="10" rx="2.5" stroke="#00d4aa" stroke-width="1.2"/>
+    <circle cx="7.5" cy="11" r="1.2" fill="#00d4aa"/>
+    <circle cx="12.5" cy="11" r="1.2" fill="#00d4aa"/>
+    <rect x="8.5" y="13.5" width="3" height="1" rx="0.5" fill="#00d4aa"/>
+    <path d="M10 6V4" stroke="#00d4aa" stroke-width="1.2" stroke-linecap="round"/>
+    <circle cx="10" cy="3.2" r="0.8" fill="#00d4aa"/>
+    <path d="M3 9.5H1.5M18.5 9.5H17" stroke="#00d4aa" stroke-width="1.2" stroke-linecap="round"/>
+  </svg>`;
+
+    const USER_SVG = `<svg viewBox="0 0 20 20" fill="none">
+    <circle cx="10" cy="7" r="3.2" stroke="#00d4aa" stroke-width="1.2"/>
+    <path d="M3.5 17c0-3.59 2.91-6.5 6.5-6.5s6.5 2.91 6.5 6.5" stroke="#00d4aa" stroke-width="1.2" stroke-linecap="round"/>
+  </svg>`;
+
+    function makeRow(role) {
+      const row = document.createElement('div');
+      row.className = 'row ' + role;
+      row.setAttribute('role', 'article');
+      const av = document.createElement('div');
+      av.className = 'av'; av.setAttribute('aria-hidden', 'true');
+      av.innerHTML = role === 'user' ? USER_SVG : BOT_SVG;
+      row.appendChild(av);
+      return row;
+    }
+
+    function addUser(text) {
+      const row = makeRow('user');
+      const b = document.createElement('div');
+      b.className = 'bubble'; b.textContent = text;
+      row.appendChild(b); feed.appendChild(row); scrollDown();
+    }
+
+    function addBot(text, sources, isErr) {
+      const row = makeRow('bot');
+      const wrap = document.createElement('div');
+      const b = document.createElement('div');
+      b.className = isErr ? 'bubble err' : 'bubble';
+
+      // Pre-process <think> blocks into HTML <details> for reasoning models
+      let preprocessedText = text.replace(
+        /<think>([\s\S]*?)<\/think>/gi,
+        '<details class="thought"><summary>Reasoning Process</summary><div class="thought-content">$1</div></details>'
+      );
+
+      b.innerHTML = DOMPurify.sanitize(marked.parse(preprocessedText), {
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 's', 'h1', 'h2', 'h3', 'h4',
+          'ul', 'ol', 'li', 'blockquote', 'hr', 'pre', 'code', 'a', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
+          'details', 'summary', 'div'],
+        ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
+      });
+      wrap.appendChild(b);
+
+      if (sources.length) {
+        const sd = document.createElement('div'); sd.className = 'sources';
+        const lbl = document.createElement('span'); lbl.textContent = 'src:'; sd.appendChild(lbl);
+        sources.forEach(src => {
+          try {
+            const u = new URL(src);
+            if (/^https?:$/.test(u.protocol)) {
+              const a = document.createElement('a');
+              a.href = u.href; a.target = '_blank'; a.rel = 'noopener noreferrer';
+              a.textContent = u.hostname + (u.pathname !== '/' ? u.pathname : '');
+              a.title = u.href; sd.appendChild(a);
+            } else throw 0;
+          } catch { const s = document.createElement('span'); s.textContent = src; sd.appendChild(s); }
+        });
+        wrap.appendChild(sd);
+      }
+      row.appendChild(wrap); feed.appendChild(row); scrollDown();
+    }
+
+    function addTyping() {
+      const row = makeRow('bot');
+      row.classList.add('typing'); row.setAttribute('aria-label', 'Typing…');
+      const b = document.createElement('div'); b.className = 'bubble';
+      b.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+      row.appendChild(b); feed.appendChild(row); scrollDown(); return row;
+    }
+
+    function scrollDown() { feed.scrollTop = feed.scrollHeight; }
+
+    window.addEventListener('offline', () => setOnline(false));
+    window.addEventListener('online', () => setOnline(true));
+  </script>
+</body>
+
+</html>
