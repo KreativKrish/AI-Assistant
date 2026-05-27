@@ -20,8 +20,8 @@ load_dotenv()
 
 # --- App Setup ---
 app = FastAPI(
-    title="Engati AI Assistant",
-    description="An AI assistant that answers questions about Engati's platform and APIs.",
+    title="Kekda AI Assistant",
+    description="An AI assistant that answers questions about any platform and APIs provided in context.",
     version="1.0.0"
 )
 
@@ -103,7 +103,7 @@ async def serve_ui():
 
 @app.get("/health", tags=["Health"])
 async def health_check():
-    return {"status": "ok", "message": "Engati AI Assistant is running."}
+    return {"status": "ok", "message": "Kekda AI Assistant is running."}
 
 
 @app.get("/api/models", tags=["Models"])
@@ -183,8 +183,8 @@ async def ingest(request: IngestRequest):
 @app.post("/api/chat", response_model=ChatResponse, tags=["Chat"])
 async def chat(request: ChatRequest):
     """
-    Send a question to the Engati AI Assistant and receive a grounded answer.
-    The assistant searches its knowledge base of Engati documentation before responding.
+    Send a question to the Kekda AI Assistant and receive a grounded answer.
+    The assistant searches its knowledge base of provided context before responding.
     """
     if not request.query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
