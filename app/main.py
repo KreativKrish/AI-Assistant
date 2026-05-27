@@ -83,7 +83,7 @@ def get_rag_chain(model_id: str = DEFAULT_MODEL):
 
         llm = ChatGroq(
             model=model_id,
-            temperature=0.6,
+            temperature=0.9,
             groq_api_key=api_key,
         )
         prompt = get_prompt()

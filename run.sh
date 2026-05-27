@@ -18,5 +18,5 @@ if ! command -v uvicorn &> /dev/null; then
 fi
 
 # Start the FastAPI application via uvicorn
-echo "Starting Engati AI Assistant..."
+echo "Starting Kekda AI Assistant..."
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
